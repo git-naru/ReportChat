@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReportChat</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Cpath d='M8 22c4-1 6-9 9-9s1 7 7 3' fill='none' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <section id="landing" hidden>
+    <div class="landing-card">
+      <div class="logo">ReportChat</div>
+      <p>스크린샷, PDF, PPT, Excel, Word 파일을 올리면 참여한 모두가 같은 화면을 보며<br>각자의 색 펜과 키보드 텍스트로 함께 표시할 수 있습니다.</p>
+      <button id="createRoom" class="primary big">새 보드 만들기</button>
+      <form id="joinForm">
+        <input id="joinCode" placeholder="받은 보드 링크 또는 코드" autocomplete="off">
+        <button>참여</button>
+      </form>
+    </div>
+  </section>
+
+  <div id="app" hidden>
+    <header>
+      <button id="toggleSidebar" class="icon" title="문서 목록">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a class="brand" href="/">ReportChat</a>
+      <button id="copyLink" class="ghost" title="이 보드의 링크를 복사해 다른 사람을 초대합니다">
+        <svg viewBox="0 0 24 24"><path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>
+        초대 링크 복사
+      </button>
+      <span id="conn" class="conn" data-state="connecting">연결 중…</span>
+      <div class="spacer"></div>
+      <div id="users" class="users"></div>
+      <button id="meBtn" class="me" title="이름과 색 바꾸기"></button>
+    </header>
+
+    <main>
+      <aside id="sidebar">
+        <label class="upload-btn primary">
+          <svg viewBox="0 0 24 24"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+          파일 올리기
+          <input type="file" id="fileInput" multiple hidden>
+        </label>
+        <p class="hint">드래그&amp;드롭하거나 <kbd>Ctrl</kbd>+<kbd>V</kbd>로 스크린샷을 붙여넣을 수 있습니다.</p>
+        <div id="docs"></div>
+      </aside>
+
+      <section id="workspace">
+        <div id="toolbar" role="toolbar">
+          <div class="group" id="tools">
+            <button data-tool="select" title="선택·이동 (V) — 빈 곳을 끌면 화면 이동"><svg viewBox="0 0 24 24"><path d="M5 3l14 8-6 2-3 6z"/></svg></button>
+            <button data-tool="pen" title="펜 (P)"><svg viewBox="0 0 24 24"><path d="M4 20l1-5L16 4l4 4L9 19zM14 6l4 4"/></svg></button>
+            <button data-tool="highlighter" title="형광펜 (H)"><svg viewBox="0 0 24 24"><path d="M9 15l-4 4h6l1-1M9 15l8-11 4 3-8 11zM9 15l4 3"/></svg></button>
+            <button data-tool="text" title="텍스트 (T) — 클릭한 곳에 입력"><svg viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg></button>
+            <button data-tool="eraser" title="지우개 (E) — 문질러서 지우기"><svg viewBox="0 0 24 24"><path d="M8 20h12M5 15l9-10 6 6-8 9H9z"/><path d="M9 11l6 6"/></svg></button>
+          </div>
+          <div class="group" id="colors"></div>
+          <div class="group" id="sizes"></div>
+          <div class="group">
+            <button id="undo" title="되돌리기 (Ctrl+Z)"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+            <button id="redo" title="다시 실행 (Ctrl+Shift+Z)"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+          </div>
+          <div class="group">
+            <div class="menu-wrap">
+              <button id="clearBtn" title="필기 지우기"><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+              <div id="clearMenu" class="menu" hidden>
+                <button data-clear="mine">이 페이지의 <b>내 필기</b> 지우기</button>
+                <button data-clear="all">이 페이지의 <b>모든 필기</b> 지우기</button>
+              </div>
+            </div>
+            <button id="exportBtn" title="필기를 포함해 이 페이지를 PNG로 저장"><svg viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6M4 20h16"/></svg></button>
+          </div>
+        </div>
+
+        <div id="stage">
+          <div id="page" hidden>
+            <img id="pageImg" alt="" draggable="false">
+            <svg id="ink" preserveAspectRatio="none"><g id="objs"></g><g id="drafts"></g><g id="selection"></g></svg>
+            <div id="overlay"></div>
+          </div>
+          <div id="empty" hidden>
+            <div class="empty-card">
+              <svg viewBox="0 0 24 24"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>
+              <h2>공유할 파일을 올려 주세요</h2>
+              <p>이미지·스크린샷, PDF, PowerPoint, Excel, Word 파일을 끌어다 놓거나<br><kbd>Ctrl</kbd>+<kbd>V</kbd>로 스크린샷을 붙여넣으세요. 올리면 모두의 화면에 바로 표시됩니다.</p>
+              <label class="upload-btn primary">파일 선택<input type="file" class="file-pick" multiple hidden></label>
+            </div>
+          </div>
+        </div>
+
+        <div id="pager">
+          <button id="prevPage" class="icon" title="이전 페이지 (PageUp)"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <span id="pageLabel"></span>
+          <button id="nextPage" class="icon" title="다음 페이지 (PageDown)"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+          <div class="spacer"></div>
+          <label class="switch" title="켜 두면 다른 사람이 넘긴 페이지로 함께 이동하고, 내가 넘기면 모두 따라옵니다">
+            <input type="checkbox" id="syncToggle" checked><span></span> 함께 보기
+          </label>
+          <div class="zoom">
+            <button id="zoomOut" class="icon" title="축소"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+            <button id="zoomFit" title="화면에 맞추기">100%</button>
+            <button id="zoomIn" class="icon" title="확대"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg></button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="meDialog">
+    <form method="dialog" id="meForm">
+      <h3>내 이름과 펜 색</h3>
+      <p class="muted">다른 참여자에게 이 이름과 색으로 표시됩니다.</p>
+      <input id="meName" maxlength="40" required placeholder="이름">
+      <div id="meColors" class="swatches"></div>
+      <button class="primary" value="ok">확인</button>
+    </form>
+  </dialog>
+
+  <div id="dropOverlay" hidden><div>여기에 놓으면 모두에게 공유됩니다</div></div>
+  <div id="toasts"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

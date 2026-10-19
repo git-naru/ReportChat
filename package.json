@@ -1,0 +1,31 @@
+{
+  "name": "reportchat",
+  "version": "1.0.0",
+  "description": "문서·스크린샷을 함께 보며 여러 명이 펜과 텍스트로 실시간 필기하는 공유 보드",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test test/*.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/git-naru/ReportChat.git"
+  },
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/git-naru/ReportChat/issues"
+  },
+  "homepage": "https://github.com/git-naru/ReportChat#readme",
+  "dependencies": {
+    "express": "^5.3.0",
+    "image-size": "^2.0.4",
+    "multer": "^2.4.0",
+    "ws": "^8.22.0"
+  },
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  }
+}

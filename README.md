@@ -68,3 +68,12 @@ test/              node --test 단위 테스트
 ```bash
 npm test
 ```
+
+## claude.ai 아티팩트 버전 (설치 불필요)
+
+`artifact/reportchat.html`은 서버 없이 claude.ai 아티팩트로 실행되는 버전입니다. 보드 데이터와 업로드한 파일은 아티팩트의 저장소에 남고, 접속자의 커서와 그리는 중인 선은 실시간으로 공유됩니다.
+
+- 이미지와 PDF는 바로 올릴 수 있습니다. PDF는 브라우저에서 쪽마다 이미지로 바뀝니다.
+- PPT, Word, Excel은 브라우저에서 변환할 수 없으므로 원본 프로그램에서 PDF로 저장한 뒤 올려야 합니다.
+- 함께 필기하고 파일을 올리려면, 아티팩트의 공유 메뉴에서 참여자를 **편집자**로 초대해야 합니다. 보기 권한만 있는 사람은 보기만 할 수 있습니다.
+- 게시할 때 선언하는 capability: `db`, `user`(profile), `room`(`draft` 주제를 interact에 개방), `assets`, `downloads`.

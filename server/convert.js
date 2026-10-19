@@ -142,8 +142,9 @@ async function loadPdfjs() {
   pdfjsPromise ||= (async () => {
     const pdfjs = await import(pathToFileURL(require.resolve('pdfjs-dist/legacy/build/pdf.mjs')).href);
     const { createCanvas } = require('@napi-rs/canvas');
-    const dir = path.dirname(require.resolve('pdfjs-dist/package.json'));
-    return { pdfjs, createCanvas, fonts: path.join(dir, 'standard_fonts') + path.sep, cmaps: path.join(dir, 'cmaps') + path.sep };
+    // pdf.js는 '/'로 끝나는 경로만 받으므로 Windows에서도 슬래시로 바꿔 넘긴다
+    const dir = path.dirname(require.resolve('pdfjs-dist/package.json')).split(path.sep).join('/');
+    return { pdfjs, createCanvas, fonts: `${dir}/standard_fonts/`, cmaps: `${dir}/cmaps/` };
   })();
   return pdfjsPromise;
 }
@@ -157,7 +158,8 @@ async function pdfToPngs(pdfPath, outDir, prefix, px) {
       data: new Uint8Array(await fs.readFile(pdfPath)),
       standardFontDataUrl: fonts, cMapUrl: cmaps, cMapPacked: true, verbosity: 0,
     }).promise;
-  } catch {
+  } catch (err) {
+    if (err?.name !== 'InvalidPDFException' && err?.name !== 'PasswordException') console.error('PDF 열기 실패:', err);
     throw new ConvertError('PDF를 읽지 못했습니다. 손상되었거나 암호가 걸린 파일인지 확인하세요.');
   }
   try {

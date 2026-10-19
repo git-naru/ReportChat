@@ -22,13 +22,23 @@
 
 단축키: `V` 선택, `P` 펜, `H` 형광펜, `T` 텍스트, `E` 지우개, `PageUp`/`PageDown` 페이지 이동.
 
+## Windows 버전 (설치 불필요)
+
+[Windows 최신 빌드](https://github.com/git-naru/ReportChat/releases/tag/windows-latest)에서 `ReportChat-windows.zip`을 받아 압축을 풀고 `ReportChat.cmd`를 더블클릭하면 됩니다. Node.js가 함께 들어 있어 따로 설치할 것이 없고, 실행하면 브라우저가 열리며 검은 창에 같은 네트워크의 다른 사람이 접속할 주소가 나옵니다.
+
+- PPT·Word·Excel은 PC에 설치된 Microsoft Office로 변환합니다. Office가 없으면 LibreOffice를 설치하면 됩니다.
+- 처음 실행할 때 방화벽 창이 뜨면 **액세스 허용**을 눌러야 다른 사람이 접속할 수 있습니다.
+- 자세한 내용은 압축 안의 `사용법.txt`를 보세요.
+
+패키지는 GitHub Actions(`.github/workflows/windows.yml`)가 Windows에서 만들고, 패키지 안의 node.exe로 서버를 띄워 이미지·PDF 업로드와 변환을 확인한 뒤 릴리스에 올립니다. 직접 만들려면 Windows에서 `npm ci && npm run build:windows`를 실행하면 `dist/ReportChat-windows.zip`이 생깁니다.
+
 ## 실행
 
-Node.js 20 이상과, Office/PDF 변환용 **LibreOffice**, **poppler-utils**(pdftoppm)가 필요합니다. 이미지 파일은 이 도구 없이도 동작합니다.
+Node.js 20 이상이 필요합니다. 이미지와 PDF는 이것만으로 동작합니다. PPT·Word·Excel을 열려면 **LibreOffice**가 필요합니다(Windows에서는 설치된 **Microsoft Office**를 먼저 사용합니다).
 
 ```bash
 # Ubuntu/Debian
-sudo apt install libreoffice poppler-utils fonts-noto-cjk
+sudo apt install libreoffice fonts-noto-cjk
 
 npm install
 npm start          # http://localhost:3000
@@ -54,7 +64,10 @@ docker run -p 3000:3000 -v reportchat-data:/data reportchat
 ```
 server/index.js    Express(업로드·파일 제공) + WebSocket(실시간 동기화)
 server/rooms.js    보드 상태, 편집 연산 검증·적용, 디스크 저장
-server/convert.js  파일 → 페이지 이미지 변환 (LibreOffice → PDF → pdftoppm)
+server/convert.js  파일 → 페이지 이미지 변환 (Office/LibreOffice → PDF → pdf.js로 PNG)
+server/office2pdf.ps1  Windows에서 Microsoft Office로 PDF 저장
+windows/           Windows 포터블 패키지의 실행 파일·안내문
+scripts/           Windows 패키지 빌드, 동작 확인(smoke) 스크립트
 public/            브라우저 클라이언트 (빌드 단계 없는 순수 JS)
 test/              node --test 단위 테스트
 ```

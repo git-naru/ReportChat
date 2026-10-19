@@ -5,6 +5,7 @@ import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
 import { WebSocketServer } from 'ws';
 import { ACCEPT_EXT, ConvertError, checkTools, convertToPages, kindOf } from './convert.js';
 import { ROOM_ID_RE, RoomStore, cleanColor, cleanName, isId, newId, PAGE_WIDTH } from './rooms.js';
@@ -258,7 +259,32 @@ async function shutdown() {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
-const tools = await checkTools();
-if (!tools.soffice) console.warn('⚠ LibreOffice(soffice)가 없어 PPT/Excel/Word 변환을 할 수 없습니다.');
-if (!tools.pdftoppm) console.warn('⚠ poppler(pdftoppm)가 없어 PDF 및 Office 문서 변환을 할 수 없습니다.');
-server.listen(PORT, () => console.log(`ReportChat: http://localhost:${PORT}`));
+/** 같은 네트워크의 다른 사람이 접속할 주소 (사설 IPv4) */
+function lanUrls() {
+  return Object.values(os.networkInterfaces()).flat()
+    .filter((a) => a && a.family === 'IPv4' && !a.internal && !a.address.startsWith('169.254.'))
+    .map((a) => `http://${a.address}:${PORT}`);
+}
+
+function openBrowser(url) {
+  const [cmd, args] = process.platform === 'win32' ? ['cmd', ['/c', 'start', '', url]]
+    : process.platform === 'darwin' ? ['open', [url]] : ['xdg-open', [url]];
+  spawn(cmd, args, { detached: true, stdio: 'ignore', windowsHide: true }).on('error', () => {}).unref();
+}
+
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') console.error(`포트 ${PORT}을(를) 이미 다른 프로그램이 쓰고 있습니다. ReportChat이 이미 켜져 있는지 확인하세요.`);
+  else console.error(err);
+  process.exit(1);
+});
+server.listen(PORT, () => {
+  console.log(`ReportChat: http://localhost:${PORT}`);
+  const lan = lanUrls();
+  if (lan.length) console.log(`같은 네트워크의 다른 사람은 이 주소로 접속합니다: ${lan.join('  ')}`);
+  if (process.env.OPEN_BROWSER === '1') openBrowser(`http://localhost:${PORT}`);
+});
+checkTools().then((tools) => {
+  if (tools.msOffice) console.log('PPT·Word·Excel 변환: Microsoft Office 사용');
+  else if (tools.soffice) console.log('PPT·Word·Excel 변환: LibreOffice 사용');
+  else console.warn('⚠ Microsoft Office나 LibreOffice가 없어 PPT·Word·Excel 파일은 열 수 없습니다. (이미지·PDF는 사용 가능)');
+});

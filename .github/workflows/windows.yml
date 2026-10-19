@@ -1,0 +1,49 @@
+name: Windows 패키지
+
+on:
+  push:
+    branches: ['main', 'claude/**']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 단위 테스트
+        run: npm test
+
+      - name: 포터블 패키지 만들기
+        run: node scripts/build-windows.mjs
+
+      - name: 패키지 안의 node.exe로 동작 확인 (이미지·PDF 업로드와 변환)
+        run: node scripts/smoke.mjs dist/ReportChat --node dist/ReportChat/node/node.exe
+
+      - name: 실행 파일로 받을 수 있게 올리기
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReportChat-windows
+          path: dist/ReportChat-windows.zip
+
+      - name: 최신 빌드를 릴리스로 게시
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete windows-latest --yes --cleanup-tag || true
+          gh release create windows-latest dist/ReportChat-windows.zip \
+            --target "$GITHUB_SHA" --prerelease \
+            --title "ReportChat Windows 최신 빌드" \
+            --notes "압축을 풀고 ReportChat.cmd를 더블클릭하세요. 자세한 내용은 압축 안의 사용법.txt를 보세요. (커밋 ${GITHUB_SHA::7})"

@@ -2,6 +2,14 @@
 
 스크린샷, PDF, PowerPoint, Excel, Word 파일을 올리면 참여한 모두가 같은 화면을 보며 **각자의 색 펜**과 **키보드 텍스트**로 함께 표시하는 실시간 공유 보드입니다.
 
+## 문서
+
+- [PRD — 제품 요구사항](docs/PRD.md)
+- [TRD — 기술 요구사항](docs/TRD.md)
+- [DRD — 디자인 요구사항](docs/DRD.md)
+- [인수인계](docs/HANDOVER.md)
+- Claude Code 작업 가이드(스킬): [.claude/skills/reportchat/SKILL.md](.claude/skills/reportchat/SKILL.md)
+
 ## 기능
 
 - **보드 만들기·초대**: 시작 화면에서 새 보드를 만들고 `초대 링크 복사`로 링크를 보내면 됩니다. 처음 들어올 때 이름과 펜 색을 정하고, 다른 사람이 이미 쓰는 색은 피해서 자동으로 정해집니다.
